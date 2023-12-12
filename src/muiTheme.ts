@@ -5,6 +5,7 @@ import '@fontsource/nunito-sans';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
       main: '#ff7400',
     },
