@@ -23,20 +23,6 @@ const Charts = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const test = await fetch(
-        "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/hospitalizations/covid-hospitalizations.csv"
-      );
-      
-      const testData = await test.text();
-      console.log(testData);
-    }
-    fetchData();
-  }
-  , []);
-
-
-  useEffect(() => {
-    const fetchData = async () => {
       try {
         const response = await fetch(
           "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/hospitalizations/covid-hospitalizations.csv"

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Container from "@mui/material/Container";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import {
@@ -10,9 +9,11 @@ import {
   UIBackground,
   ChartXY,
   AxisTickStrategies,
+  LegendBoxBuilders,
+  LineSeries,
 } from "@arction/lcjs";
 import Papa from "papaparse";
-import { OutlinedInput } from "@mui/material";
+import { Typography } from "@mui/material";
 
 interface CountryData {
   iso_code: string;
@@ -21,9 +22,9 @@ interface CountryData {
 }
 
 const Home = () => {
-  const [startDate, setStartDate] = useState("2020-03-01");
-  const [endDate, setEndDate] = useState("2023-12-31");
-  const [selectedCountries, setSelectedCountries] = useState<string[]>(["USA"]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [chartData, setChartData] = useState<CountryData[]>([]);
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined
@@ -78,10 +79,10 @@ const Home = () => {
       }
     };
     fetchData();
-  }, [startDate, endDate]);
+  }, []);
 
   useEffect(() => {
-    if(chart) {
+    if (chart) {
       chart.dispose();
     }
     // Initialize the chart when the component mounts
@@ -98,14 +99,15 @@ const Home = () => {
     });
 
     // Configure the X-axis as a DateTime Axis
-    const xAxis = newChart.getDefaultAxisX();
-    xAxis.setTickStrategy(AxisTickStrategies.DateTime);
-    xAxis.setInterval({
-      // Set the date range
-      start: new Date(startDate).getTime(),
-      end: new Date(endDate).getTime(),
-    });
+    newChart.getDefaultAxisX()
+      .setTickStrategy(AxisTickStrategies.DateTime);
 
+    newChart.getDefaultAxisY()
+      .setTitle("ICU Patients / Million")
+
+    // Set the chart title
+    newChart.setTitle("ICU Patients");
+  
     setChart(newChart);
 
     return () => {
@@ -113,7 +115,7 @@ const Home = () => {
         newChart.dispose();
       }
     };
-  }, [startDate, endDate]);
+  }, []);
 
   useEffect(() => {
     if (chart && chartData.length > 0) {
@@ -124,10 +126,11 @@ const Home = () => {
       selectedCountries.forEach((country) => {
         const countrySeries = chart.addLineSeries();
         const countryData = chartData
-          .filter((data) => data.iso_code === country)
           .filter(
             (data) =>
-              new Date(data.date).getTime() >= new Date(startDate).getTime() &&
+              data.iso_code === country &&
+              new Date(data.date).getTime() >=
+                new Date(startDate).getTime() &&
               new Date(data.date).getTime() <= new Date(endDate).getTime()
           );
 
@@ -142,8 +145,9 @@ const Home = () => {
         if (seriesData.length > 1) {
           countrySeries.add(seriesData);
         }
-      });
-    }
+      }
+      );
+    }     
   }, [chart, chartData, selectedCountries, startDate, endDate]);
 
   const isoCodeLocationPairs = isoCodes.map((isoCode, index) => ({
@@ -155,25 +159,28 @@ const Home = () => {
   return (
     <Container>
       <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
-        <TextField
-          label="Start Date"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <TextField
-          label="End Date"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+        <FormControl>
+          <Typography>Start Date</Typography>
+          <TextField
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </FormControl>
+        <FormControl>
+          <Typography>End Date</Typography>
+          <TextField
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </FormControl>
         <FormControl sx={{ width: 300 }}>
-          <InputLabel>Select Countries</InputLabel>
+          <Typography>Select Countries</Typography>
           <Select
             multiple
             value={selectedCountries}
             onChange={(e) => setSelectedCountries(e.target.value as string[])}
-            input={<OutlinedInput label="Select Countries" />}
           >
             {isoCodeLocationPairs.map(({ isoCode, location, key }) => (
               <MenuItem key={key} value={isoCode}>
