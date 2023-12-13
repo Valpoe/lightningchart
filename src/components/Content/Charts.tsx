@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Container from "@mui/material/Container";
 import {
-  lightningChart,
   UIBackground,
   ChartXY,
   AxisTickStrategies,
   UIElementBuilders,
 } from "@arction/lcjs";
+import Typography from "@mui/material/Typography";
+import  "../Styling/ControlsContainer.css";
 import Papa from "papaparse";
+import { createChart } from "./ChartHelper";
 
 interface CountryData {
   iso_code: string;
@@ -16,6 +18,7 @@ interface CountryData {
 }
 
 const Charts = () => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<CountryData[]>([]);
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined
@@ -49,12 +52,11 @@ const Charts = () => {
                     total_icu_patients: 0,
                   };
                 }
-
                 countryDataMap[isoCode].total_icu_patients += value;
               }
             });
 
-            // Convert the aggregated map to an array
+            // Convert the country data map to an array
             const countryData: CountryData[] = Object.values(countryDataMap);
 
             // Sort the array based on total_icu_patients in descending order
@@ -73,7 +75,6 @@ const Charts = () => {
         console.error("Error fetching data:", error);
       }
     };
-
     fetchData();
   }, []);
 
@@ -99,19 +100,23 @@ const Charts = () => {
         });
       });
       // Adjust the y-axis range to be higher than the highest bar height
-const maxBarHeight = Math.max(...chartData.map((data) => data.total_icu_patients));
-chart.getDefaultAxisY().setInterval({ start: 0, end: maxBarHeight + 100000 });
-
+      const maxBarHeight = Math.max(
+        ...chartData.map((data) => data.total_icu_patients)
+      );
+      chart
+        .getDefaultAxisY()
+        .setInterval({ start: 0, end: maxBarHeight + 100000 });
     }
   }, [chart, chartData]);
 
   useEffect(() => {
     if (chart) {
       // Configure the X-axis
-      const xAxis = chart.getDefaultAxisX()
-        .setMouseInteractions(false) // Disable mouse interactions
-        .setScrollStrategy(undefined) // Disable zooming
-        .setTickStrategy(AxisTickStrategies.Empty); // Disable default ticks
+      const xAxis = chart
+        .getDefaultAxisX()
+        .setMouseInteractions(false)
+        .setScrollStrategy(undefined)
+        .setTickStrategy(AxisTickStrategies.Empty);
 
       // Add custom tick labels as locations from the chart data
       const tickLabels = chartData.map((data) => data.location);
@@ -123,49 +128,54 @@ chart.getDefaultAxisY().setInterval({ start: 0, end: maxBarHeight + 100000 });
           .setValue(index + 0.4)
           .setTextFormatter(() => label)
           .setGridStrokeLength(0)
-          .setMouseInteractions(false);
+          .setMouseInteractions(false)
+          .setTickLabelRotation(45);
       });
 
       // Configure the Y-axis label
-      chart.getDefaultAxisY()
+      chart
+        .getDefaultAxisY()
         .setMouseInteractions(false) // Disable mouse interactions
         .setScrollStrategy(undefined) // Enable scrolling
         .setTitle("Total ICU patients"); // Set the Y-axis title
 
       // Set the chart title
-      chart.setTitle("Top 10 Countries All Time");
+      chart.setTitle("Top 10 Countries");
     }
   }, [chart, chartData]);
 
   useEffect(() => {
-    // Initialize the chart when the component mounts
-    const newChart = lightningChart({
-      license: process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY,
-      licenseInformation: {
-        appTitle: "LightningChart JS Trial",
-        company: "LightningChart Ltd.",
-      },
-    }).ChartXY({
-      width: 1200,
-      height: 600,
-      container: "chart-container",
-    });
+    // Get the license key from the environment variable
+    const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
 
-    setChart(newChart);
+    // Check if the license key is defined and chartContainerRef is available
+    if (licenseKey && chartContainerRef.current) {
+      // Initialize the chart when the component mounts
+      const newChart = createChart(licenseKey, chartContainerRef.current);
+      setChart(newChart);
 
-    // Clean up the chart when the component unmounts
-    return () => {
-      if (newChart) {
-        newChart.dispose();
-      }
-    };
-  }, []);
+      // Clean up the chart when the component unmounts
+      return () => {
+        if (newChart) {
+          newChart.dispose();
+        }
+      };
+    } else {
+      console.error(
+        "LightningChart license key is undefined or chart container is null."
+      );
+    }
+  }, [chartContainerRef]);
 
   return (
     <Container>
+      <div className="controls-container">
+      <Typography>Top 10 Countries by Total ICU Patients During Pandemic</Typography>
+      </div>
       <div
         id="chart-container"
-        style={{ width: "100%", height: "100%" }}
+        className="chart-container"
+        ref={chartContainerRef}
       ></div>
     </Container>
   );

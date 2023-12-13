@@ -1,18 +1,17 @@
-// components/content/ChartHelper.tsx
+import { lightningChart } from "@arction/lcjs";
 
-import { lightningChart, Themes } from '@arction/lcjs';
+import "../../charts.css";
 
-export const createChart = (licenseKey: string) => {
+export const createChart = (licenseKey: string, container: HTMLDivElement) => {
   const lc = lightningChart({
     license: licenseKey,
     licenseInformation: {
-      appTitle: 'LightningChart JS Trial',
-      company: 'LightningChart Ltd.',
+      appTitle: "LightningChart JS Trial",
+      company: "LightningChart Ltd.",
     },
   });
 
-  // make the chart 600 x 400 px in size
-    const chart = lc.ChartXY({ width: 600, height: 400, theme: Themes.light });
+  const chart = lc.ChartXY({ container });
 
   return chart;
 };

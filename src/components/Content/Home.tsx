@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Container from "@mui/material/Container";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
-import {
-  lightningChart,
-  UIBackground,
-  ChartXY,
-  AxisTickStrategies,
-  LegendBoxBuilders,
-  LineSeries,
-} from "@arction/lcjs";
+import Typography from "@mui/material/Typography";
+import { UIBackground, ChartXY, AxisTickStrategies } from "@arction/lcjs";
 import Papa from "papaparse";
-import { Typography } from "@mui/material";
+import { createChart } from "./ChartHelper";
+import "../Styling/ControlsContainer.css";
 
 interface CountryData {
   iso_code: string;
@@ -29,6 +24,7 @@ const Home = () => {
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined
   );
+  const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isoCodes, setIsoCodes] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
 
@@ -59,6 +55,7 @@ const Home = () => {
             // Populate the locations state with unique locations
             setLocations(availableLocations as string[]);
 
+            // Filter the data to only include ICU occupancy per million
             const newData: CountryData[] = result.data
               .filter(
                 (row: any) =>
@@ -82,59 +79,66 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (chart) {
-      chart.dispose();
+    // Get the license key from the environment variable
+    const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
+
+    // Check if the license key is defined and chartContainerRef is available
+    if (licenseKey && chartContainerRef.current) {
+      // Initialize the chart when the component mounts
+      const newChart = createChart(licenseKey, chartContainerRef.current);
+
+      // Configure the X-axis as a DateTime Axis
+      newChart.getDefaultAxisX().setTickStrategy(AxisTickStrategies.DateTime).setTitle("Date Range");
+
+      // Configure the Y-axis
+      newChart.getDefaultAxisY().setTitle("ICU Patients / Million");
+
+      // Set the chart title
+      newChart.setTitle("ICU Patients / Million");
+
+      setChart(newChart);
+
+      // Clean up the chart when the component unmounts
+      return () => {
+        if (newChart) {
+          newChart.dispose();
+        }
+      };
+    } else {
+      console.error(
+        "LightningChart license key is undefined or chart container is null."
+      );
     }
-    // Initialize the chart when the component mounts
-    const newChart = lightningChart({
-      license: process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY,
-      licenseInformation: {
-        appTitle: "LightningChart JS Trial",
-        company: "LightningChart Ltd.",
-      },
-    }).ChartXY({
-      width: 1200,
-      height: 600,
-      container: "chart-container",
-    });
-
-    // Configure the X-axis as a DateTime Axis
-    newChart.getDefaultAxisX()
-      .setTickStrategy(AxisTickStrategies.DateTime);
-
-    newChart.getDefaultAxisY()
-      .setTitle("ICU Patients / Million")
-
-    // Set the chart title
-    newChart.setTitle("ICU Patients");
-  
-    setChart(newChart);
-
-    return () => {
-      if (newChart) {
-        newChart.dispose();
-      }
-    };
-  }, []);
+  }, [chartContainerRef]);
 
   useEffect(() => {
     if (chart && chartData.length > 0) {
       // Clear data of existing series
       chart.getSeries().forEach((series) => series.dispose());
 
+      const legend = chart.addLegendBox().setAutoDispose({
+        type: "max-width",
+        maxWidth: 0.3,
+      });
+
       // Create a line series for each selected country
       selectedCountries.forEach((country) => {
-        const countrySeries = chart.addLineSeries();
-        const countryData = chartData
-          .filter(
-            (data) =>
-              data.iso_code === country &&
-              new Date(data.date).getTime() >=
-                new Date(startDate).getTime() &&
-              new Date(data.date).getTime() <= new Date(endDate).getTime()
-          );
+        const existingSeries = chart
+          .getSeries()
+          .find((series) => series.getName() === country);
 
-        console.log("Country Data:", countryData);
+        if (existingSeries) {
+          existingSeries.dispose();
+        }
+
+        const countrySeries = chart.addLineSeries();
+        const countryData = chartData.filter(
+          (data) =>
+            data.iso_code === country &&
+            new Date(data.date).getTime() >= new Date(startDate).getTime() &&
+            new Date(data.date).getTime() <= new Date(endDate).getTime()
+        );
+
         const seriesData = countryData
           .filter((data) => !isNaN(new Date(data.date).getTime()))
           .map((data) => ({
@@ -145,21 +149,32 @@ const Home = () => {
         if (seriesData.length > 1) {
           countrySeries.add(seriesData);
         }
-      }
+        // Set series name for legend
+        countrySeries.setName(country);
+
+        // Add series to legend
+        legend.add(countrySeries);
+      });
+      chart.setAutoCursor((cursor) =>
+        cursor
+          .setResultTableAutoTextStyle(true)
+          .setTickMarkerXVisible(false)
+          .setTickMarkerYAutoTextStyle(true)
       );
-    }     
+    }
   }, [chart, chartData, selectedCountries, startDate, endDate]);
 
+  // Create an array of objects containing the ISO code and location
   const isoCodeLocationPairs = isoCodes.map((isoCode, index) => ({
     isoCode,
     location: locations[index],
-    key: isoCode || index.toString(), // Use isoCode or index as the key
+    key: isoCode || index.toString(),
   }));
 
   return (
     <Container>
-      <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
-        <FormControl>
+      <div className="controls-container">
+        <FormControl sx={{ width: 300 }}>
           <Typography>Start Date</Typography>
           <TextField
             type="date"
@@ -167,7 +182,7 @@ const Home = () => {
             onChange={(e) => setStartDate(e.target.value)}
           />
         </FormControl>
-        <FormControl>
+        <FormControl sx={{ width: 300 }}>
           <Typography>End Date</Typography>
           <TextField
             type="date"
@@ -190,7 +205,11 @@ const Home = () => {
           </Select>
         </FormControl>
       </div>
-      <div id="chart-container" style={{ width: "100%", height: "100%" }}></div>
+      <div
+        id="chart-container"
+        className="chart-container"
+        ref={chartContainerRef}
+      ></div>
     </Container>
   );
 };
