@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from './muiTheme'; // Import your custom theme
+import theme from './muiTheme';
 
 import './index.css';
 import App from './App';
@@ -15,7 +15,7 @@ root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+        <App />
     </ThemeProvider>
   </React.StrictMode>
 );

@@ -38,15 +38,15 @@ export default function Layout({ children }: LayoutProps = {}) {
             <ListItemIcon>
               <HomeIcon />
             </ListItemIcon>
-            <ListItemText primary="Home" />
+            <ListItemText primary="Line Chart" />
           </ListItemButton>
         </Link>
-        <Link to="/content" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link to="/charts" style={{ textDecoration: 'none', color: 'inherit' }}>
           <ListItemButton>
             <ListItemIcon>
               <SourceIcon />
             </ListItemIcon>
-            <ListItemText primary="Content" />
+            <ListItemText primary="Bar Chart" />
           </ListItemButton>
         </Link>
       </List>
@@ -70,7 +70,7 @@ export default function Layout({ children }: LayoutProps = {}) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            LightningChart
+            COVID-19 Data Visualization
           </Typography>
         </Toolbar>
       </AppBar>
