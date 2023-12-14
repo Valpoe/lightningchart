@@ -41,7 +41,7 @@ export default function Layout({ children }: LayoutProps = {}) {
             <ListItemText primary="Line Chart" />
           </ListItemButton>
         </Link>
-        <Link to="/charts" style={{ textDecoration: "none", color: "inherit" }}>
+        <Link to="/barchart" style={{ textDecoration: "none", color: "inherit" }}>
           <ListItemButton>
             <ListItemIcon>
               <BarChartIcon />
