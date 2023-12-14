@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@mui/material/Container";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
-import Typography from "@mui/material/Typography";
+import InputAdornment from "@mui/material/InputAdornment";
 import { UIBackground, ChartXY, AxisTickStrategies } from "@arction/lcjs";
 import Papa from "papaparse";
 import { createChart } from "./ChartHelper";
@@ -24,7 +24,6 @@ const Home = () => {
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined
   );
-  const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isoCodes, setIsoCodes] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
 
@@ -72,30 +71,66 @@ const Home = () => {
           },
         });
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching or parsing data:", error);
       }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
+    // Remove series if the country is not selected
+    if (chart) {
+      chart.getSeries().forEach((series) => {
+        if (!selectedCountries.includes(series.getName())) {
+          series.dispose();
+        }
+      });
+    }
+  }, [chart, selectedCountries]);
+
+  useEffect(() => {
+    if (chart && chartData.length > 0) {
+      // Clear data of existing series
+      chart.getSeries().forEach((series) => series.dispose());
+
+      // Create a line series for each selected country
+      selectedCountries.forEach((country) => {
+        const countrySeries = chart.addLineSeries();
+        const countryData = chartData.filter(
+          (data) =>
+            data.iso_code === country &&
+            new Date(data.date).getTime() >= new Date(startDate).getTime() &&
+            new Date(data.date).getTime() <= new Date(endDate).getTime()
+        );
+        console.log("line series: ", countrySeries);
+        const seriesData = countryData
+          .filter((data) => !isNaN(new Date(data.date).getTime()))
+          .map((data) => ({
+            x: new Date(data.date).getTime(),
+            y: data.icu_patients_per_million,
+          }));
+        // Check if there are enough data points for a line series
+        if (seriesData.length > 1) {
+          countrySeries.add(seriesData);
+        }
+      });
+    }
+  }, [chart, chartData, selectedCountries, startDate, endDate]);
+
+  useEffect(() => {
     // Get the license key from the environment variable
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
 
     // Check if the license key is defined and chartContainerRef is available
-    if (licenseKey && chartContainerRef.current) {
+    if (licenseKey) {
       // Initialize the chart when the component mounts
-      const newChart = createChart(licenseKey, chartContainerRef.current);
-
-      // Configure the X-axis as a DateTime Axis
-      newChart.getDefaultAxisX().setTickStrategy(AxisTickStrategies.DateTime).setTitle("Date Range");
-
-      // Configure the Y-axis
+      const newChart = createChart(licenseKey, "chart-container");
+      newChart
+        .getDefaultAxisX()
+        .setTickStrategy(AxisTickStrategies.DateTime)
+        .setTitle("Date Range");
       newChart.getDefaultAxisY().setTitle("ICU Patients / Million");
-
-      // Set the chart title
       newChart.setTitle("ICU Patients / Million");
-
       setChart(newChart);
 
       // Clean up the chart when the component unmounts
@@ -109,60 +144,7 @@ const Home = () => {
         "LightningChart license key is undefined or chart container is null."
       );
     }
-  }, [chartContainerRef]);
-
-  useEffect(() => {
-    if (chart && chartData.length > 0) {
-      // Clear data of existing series
-      chart.getSeries().forEach((series) => series.dispose());
-
-      const legend = chart.addLegendBox().setAutoDispose({
-        type: "max-width",
-        maxWidth: 0.3,
-      });
-
-      // Create a line series for each selected country
-      selectedCountries.forEach((country) => {
-        const existingSeries = chart
-          .getSeries()
-          .find((series) => series.getName() === country);
-
-        if (existingSeries) {
-          existingSeries.dispose();
-        }
-
-        const countrySeries = chart.addLineSeries();
-        const countryData = chartData.filter(
-          (data) =>
-            data.iso_code === country &&
-            new Date(data.date).getTime() >= new Date(startDate).getTime() &&
-            new Date(data.date).getTime() <= new Date(endDate).getTime()
-        );
-
-        const seriesData = countryData
-          .filter((data) => !isNaN(new Date(data.date).getTime()))
-          .map((data) => ({
-            x: new Date(data.date).getTime(),
-            y: data.icu_patients_per_million,
-          }));
-        // Check if there are enough data points for a line series
-        if (seriesData.length > 1) {
-          countrySeries.add(seriesData);
-        }
-        // Set series name for legend
-        countrySeries.setName(country);
-
-        // Add series to legend
-        legend.add(countrySeries);
-      });
-      chart.setAutoCursor((cursor) =>
-        cursor
-          .setResultTableAutoTextStyle(true)
-          .setTickMarkerXVisible(false)
-          .setTickMarkerYAutoTextStyle(true)
-      );
-    }
-  }, [chart, chartData, selectedCountries, startDate, endDate]);
+  }, []);
 
   // Create an array of objects containing the ISO code and location
   const isoCodeLocationPairs = isoCodes.map((isoCode, index) => ({
@@ -171,45 +153,65 @@ const Home = () => {
     key: isoCode || index.toString(),
   }));
 
+  // Use a variable to store the label for the closed Select component
+  const selectedCountriesLabel = `${selectedCountries.length} countries selected`;
+
   return (
     <Container>
       <div className="controls-container">
         <FormControl sx={{ width: 300 }}>
-          <Typography>Start Date</Typography>
           <TextField
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  {startDate ? "Start Date" : "Start Date"}
+                </InputAdornment>
+              ),
+            }}
           />
         </FormControl>
         <FormControl sx={{ width: 300 }}>
-          <Typography>End Date</Typography>
           <TextField
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  {startDate ? "End Date" : "End Date"}
+                </InputAdornment>
+              ),
+            }}
           />
         </FormControl>
         <FormControl sx={{ width: 300 }}>
-          <Typography>Select Countries</Typography>
           <Select
             multiple
             value={selectedCountries}
             onChange={(e) => setSelectedCountries(e.target.value as string[])}
+            displayEmpty
+            renderValue={(selected) => {
+              if (selected.length === 0) {
+                return <em>Select countries</em>;
+              }
+              return selectedCountriesLabel;
+            }}
           >
-            {isoCodeLocationPairs.map(({ isoCode, location, key }) => (
-              <MenuItem key={key} value={isoCode}>
-                {isoCode} - {location}
+            {isoCodeLocationPairs.map((pair) => (
+              <MenuItem key={pair.key} value={pair.isoCode}>
+                {pair.isoCode} - {pair.location}
+                {selectedCountries.includes(pair.isoCode) && (
+                  <span style={{ marginLeft: "8px", color: "green" }}>✔</span>
+                )}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       </div>
-      <div
-        id="chart-container"
-        className="chart-container"
-        ref={chartContainerRef}
-      ></div>
+      <div id="chart-container" className="chart-container"></div>
     </Container>
   );
 };

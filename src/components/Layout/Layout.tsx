@@ -1,26 +1,26 @@
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import { Link } from 'react-router-dom';
+import * as React from "react";
+import { Link } from "react-router-dom";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
 // Icons
-import HomeIcon from '@mui/icons-material/Home';
-import SourceIcon from '@mui/icons-material/Source';
-import MenuIcon from '@mui/icons-material/Menu';
+import LineAxisIcon from "@mui/icons-material/LineAxis";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import MenuIcon from "@mui/icons-material/Menu";
 
 const drawerWidth = 240;
 
 interface LayoutProps {
-    children?: React.ReactNode;
-  }
+  children?: React.ReactNode;
+}
 
 export default function Layout({ children }: LayoutProps = {}) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -33,18 +33,18 @@ export default function Layout({ children }: LayoutProps = {}) {
     <div>
       <Toolbar />
       <List>
-        <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
           <ListItemButton>
             <ListItemIcon>
-              <HomeIcon />
+              <LineAxisIcon />
             </ListItemIcon>
             <ListItemText primary="Line Chart" />
           </ListItemButton>
         </Link>
-        <Link to="/charts" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link to="/charts" style={{ textDecoration: "none", color: "inherit" }}>
           <ListItemButton>
             <ListItemIcon>
-              <SourceIcon />
+              <BarChartIcon />
             </ListItemIcon>
             <ListItemText primary="Bar Chart" />
           </ListItemButton>
@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps = {}) {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <AppBar
         position="fixed"
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -65,12 +65,12 @@ export default function Layout({ children }: LayoutProps = {}) {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            COVID-19 Data Visualization
+            COVID-19 Data Charts
           </Typography>
         </Toolbar>
       </AppBar>
@@ -87,8 +87,11 @@ export default function Layout({ children }: LayoutProps = {}) {
             keepMounted: true,
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -96,8 +99,11 @@ export default function Layout({ children }: LayoutProps = {}) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -107,13 +113,13 @@ export default function Layout({ children }: LayoutProps = {}) {
       <Box
         component="main"
         sx={{
-            flexGrow: 1,
-            p: 3,
-            width: { sm: `calc(100% - ${drawerWidth}px)` },                   
-          }}
+          flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+        }}
       >
         <Toolbar />
-      {children}
+        {children}
       </Box>
     </Box>
   );

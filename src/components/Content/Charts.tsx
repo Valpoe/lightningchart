@@ -7,7 +7,7 @@ import {
   UIElementBuilders,
 } from "@arction/lcjs";
 import Typography from "@mui/material/Typography";
-import  "../Styling/ControlsContainer.css";
+import "../Styling/ControlsContainer.css";
 import Papa from "papaparse";
 import { createChart } from "./ChartHelper";
 
@@ -18,7 +18,6 @@ interface CountryData {
 }
 
 const Charts = () => {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
   const [chartData, setChartData] = useState<CountryData[]>([]);
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined
@@ -137,7 +136,7 @@ const Charts = () => {
         .getDefaultAxisY()
         .setMouseInteractions(false) // Disable mouse interactions
         .setScrollStrategy(undefined) // Enable scrolling
-        .setTitle("Total ICU patients"); // Set the Y-axis title
+        .setTitle("Weekly New Admissions Total"); // Set the Y-axis title
 
       // Set the chart title
       chart.setTitle("Top 10 Countries");
@@ -148,10 +147,10 @@ const Charts = () => {
     // Get the license key from the environment variable
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
 
-    // Check if the license key is defined and chartContainerRef is available
-    if (licenseKey && chartContainerRef.current) {
+    // Check if the license key is defined
+    if (licenseKey) {
       // Initialize the chart when the component mounts
-      const newChart = createChart(licenseKey, chartContainerRef.current);
+      const newChart = createChart(licenseKey, "chart-container");
       setChart(newChart);
 
       // Clean up the chart when the component unmounts
@@ -161,22 +160,18 @@ const Charts = () => {
         }
       };
     } else {
-      console.error(
-        "LightningChart license key is undefined or chart container is null."
-      );
+      console.error("LightningChart license key is undefined");
     }
-  }, [chartContainerRef]);
+  }, []);
 
   return (
     <Container>
       <div className="controls-container">
-      <Typography>Top 10 Countries by Total ICU Patients During Pandemic</Typography>
+        <Typography>
+          Total of COVID-19 patients Newly Admitted to ICU
+        </Typography>
       </div>
-      <div
-        id="chart-container"
-        className="chart-container"
-        ref={chartContainerRef}
-      ></div>
+      <div id="chart-container" className="chart-container"></div>
     </Container>
   );
 };

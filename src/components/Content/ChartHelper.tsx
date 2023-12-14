@@ -2,7 +2,7 @@ import { lightningChart } from "@arction/lcjs";
 
 import "../../charts.css";
 
-export const createChart = (licenseKey: string, container: HTMLDivElement) => {
+export const createChart = (licenseKey: string, container: "chart-container") => {
   const lc = lightningChart({
     license: licenseKey,
     licenseInformation: {
