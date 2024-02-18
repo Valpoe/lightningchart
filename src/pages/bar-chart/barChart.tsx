@@ -17,7 +17,7 @@ interface ElectricityData {
 const BarChart = () => {
   const id = useId();
   const [chartData, setChartData] = useState<ElectricityData[]>([]);
-  const [barChart, setBarChart] = useState<any>();
+  const [barChart, setBarChart] = useState<any>(undefined);
 
   useEffect(() => {
     setChartData(data as ElectricityData[]);
@@ -36,14 +36,12 @@ const BarChart = () => {
           container,
         })
         .setSorting(BarChartSorting.None);
-      barChart.valueAxis.setTitle('Global Active Power');
-      barChart.categoryAxis.setTitle('Time');
+      barChart.setTitle('Global Active Power Consumption');
+      barChart.valueAxis.setTitle('Global Active Power (kW)');
       setBarChart(barChart);
 
       return () => {
-        if (barChart) {
-          barChart.dispose();
-        }
+        if (barChart) barChart.dispose();
       };
     } else {
       console.error('LightningChart license key is undefined');
@@ -51,7 +49,7 @@ const BarChart = () => {
   }, [id]);
 
   useEffect(() => {
-    if (chartData.length === 0) return;
+    if (chartData.length === 0 || !barChart) return;
 
     const mappedData = chartData.map((entry) => ({
       category: entry.Date,
