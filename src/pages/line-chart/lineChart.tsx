@@ -7,8 +7,8 @@ import Select from '@mui/material/Select';
 import InputAdornment from '@mui/material/InputAdornment';
 import { UIBackground, ChartXY, AxisTickStrategies } from '@arction/lcjs';
 import Papa from 'papaparse';
-import { createChart } from '../ChartHelper';
 import '../../styles/controls-container.css';
+import { createChart } from '../../components/ChartHelper';
 
 interface CountryData {
   iso_code: string;
@@ -16,7 +16,7 @@ interface CountryData {
   icu_patients_per_million: number;
 }
 
-const Home = () => {
+const LineChart = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -222,4 +222,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default LineChart;

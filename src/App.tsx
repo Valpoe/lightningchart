@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/siteLayout';
 import './App.css';
-import Home from './components/pages/line-chart/lineChart';
-import Charts from './components/pages/rectangle-chart/rectangleChart';
-import BarChart from './components/pages/bar-chart/barChart';
+import LineChart from './pages/line-chart/lineChart';
+import RectangleChart from './pages/rectangle-chart/rectangleChart';
+import BarChart from './pages/bar-chart/barChart';
 
 function App() {
   return (
@@ -12,11 +12,11 @@ function App() {
         <Routes>
           <Route
             path='/line-chart'
-            element={<Home />}
+            element={<LineChart />}
           />
           <Route
             path='/rectangle-chart'
-            element={<Charts />}
+            element={<RectangleChart />}
           />
           <Route
             path='/bar-chart'

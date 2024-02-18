@@ -9,7 +9,7 @@ import {
 import Typography from '@mui/material/Typography';
 import '../../styles/controls-container.css';
 import Papa from 'papaparse';
-import { createChart } from '../ChartHelper';
+import { createChart } from '../../components/ChartHelper';
 
 interface CountryData {
   iso_code: string;
@@ -17,7 +17,7 @@ interface CountryData {
   total_icu_patients: number;
 }
 
-const Charts = () => {
+const RectangleChart = () => {
   const [chartData, setChartData] = useState<CountryData[]>([]);
   const [chart, setChart] = useState<ChartXY<UIBackground> | undefined>(
     undefined,
@@ -179,4 +179,4 @@ const Charts = () => {
   );
 };
 
-export default Charts;
+export default RectangleChart;

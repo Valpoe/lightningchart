@@ -1,6 +1,6 @@
 import { lightningChart } from '@arction/lcjs';
 
-import '../styles/chart-container.css';
+import '../components/styles/chart-container.css';
 
 export const createChart = (
   licenseKey: string,

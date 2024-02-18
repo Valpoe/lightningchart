@@ -7,7 +7,7 @@ import {
   Themes,
 } from '@arction/lcjs';
 
-import data from '../../../data/power-consumption.json';
+import data from '../../data/power-consumption.json';
 
 interface ElectricityData {
   Date: string;
