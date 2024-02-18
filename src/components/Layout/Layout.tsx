@@ -1,20 +1,20 @@
-import * as React from "react";
-import { Link } from "react-router-dom";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import * as React from 'react';
+import { Link } from 'react-router-dom';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 
 // Icons
-import LineAxisIcon from "@mui/icons-material/LineAxis";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import MenuIcon from "@mui/icons-material/Menu";
+import LineAxisIcon from '@mui/icons-material/LineAxis';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const drawerWidth = 240;
 
@@ -33,20 +33,37 @@ export default function Layout({ children }: LayoutProps = {}) {
     <div>
       <Toolbar />
       <List>
-        <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+        <Link
+          to='/line-chart'
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
           <ListItemButton>
             <ListItemIcon>
               <LineAxisIcon />
             </ListItemIcon>
-            <ListItemText primary="Line Chart" />
+            <ListItemText primary='Line Chart' />
           </ListItemButton>
         </Link>
-        <Link to="/barchart" style={{ textDecoration: "none", color: "inherit" }}>
+        <Link
+          to='/rectangle-chart'
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
           <ListItemButton>
             <ListItemIcon>
               <BarChartIcon />
             </ListItemIcon>
-            <ListItemText primary="Bar Chart" />
+            <ListItemText primary='Rectangle Chart' />
+          </ListItemButton>
+        </Link>
+        <Link
+          to='/bar-chart'
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <ListItemButton>
+            <ListItemIcon>
+              <BarChartIcon />
+            </ListItemIcon>
+            <ListItemText primary='Bar Chart' />
           </ListItemButton>
         </Link>
       </List>
@@ -54,42 +71,46 @@ export default function Layout({ children }: LayoutProps = {}) {
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: 'flex' }}>
       <AppBar
-        position="fixed"
+        position='fixed'
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
         <Toolbar>
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
+            color='inherit'
+            aria-label='open drawer'
+            edge='start'
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            COVID-19 Data Charts
+          <Typography
+            variant='h6'
+            noWrap
+            component='div'
+          >
+            Data Charts
           </Typography>
         </Toolbar>
       </AppBar>
       <Box
-        component="nav"
+        component='nav'
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        aria-label='mailbox folders'
       >
         <Drawer
-          variant="temporary"
+          variant='temporary'
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
             keepMounted: true,
           }}
           sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
             },
           }}
@@ -97,11 +118,11 @@ export default function Layout({ children }: LayoutProps = {}) {
           {drawer}
         </Drawer>
         <Drawer
-          variant="permanent"
+          variant='permanent'
           sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
             },
           }}
@@ -111,7 +132,7 @@ export default function Layout({ children }: LayoutProps = {}) {
         </Drawer>
       </Box>
       <Box
-        component="main"
+        component='main'
         sx={{
           flexGrow: 1,
           p: 3,
