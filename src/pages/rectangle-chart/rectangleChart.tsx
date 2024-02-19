@@ -9,7 +9,7 @@ import {
 import Typography from '@mui/material/Typography';
 import '../../styles/controls-container.css';
 import Papa from 'papaparse';
-import { createChart } from '../../components/chartHelper';
+import { createChart } from '../../components/ChartHelper';
 
 interface CountryData {
   iso_code: string;
