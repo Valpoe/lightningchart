@@ -1,11 +1,16 @@
 import React, { useEffect, useId, useState } from 'react';
 import Container from '@mui/material/Container';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import { Button } from '@mui/material';
 import {
   lightningChart,
   BarChartTypes,
   BarChartSorting,
   SolidFill,
   Themes,
+  BarChart,
 } from '@arction/lcjs';
 import {
   parse,
@@ -13,40 +18,29 @@ import {
   eachDayOfInterval,
   format,
   formatDate,
+  set,
 } from 'date-fns';
 import data from '../../data/power-consumption.json';
+import { ThemeOptions, ConsumptionData } from '../../utilities/definitions';
 import '../../styles/controls-container.css';
 
-interface ElectricityData {
-  Date: string;
-  Global_active_power: string;
-}
-
-const normalizeDate = (dateString: string): string => {
-  const parts = dateString.split('/');
-  const day = parts[0];
-  const month = parts[1];
-  const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
-  return `${day}/${month}/${year}`;
-};
-
-const BarChart = () => {
+const BarChartComp = () => {
   const id = useId();
-  const [chartData, setChartData] = useState<ElectricityData[]>([]);
-  const [barChart, setBarChart] = useState<any>(undefined);
-  const [startDate, setStartDate] = useState('');
+  const [chartData, setChartData] = useState<ConsumptionData[]>([]);
+  const [barChart, setBarChart] = useState<BarChart | undefined>(undefined);
+  const [startDate, setStartDate] = useState('01/01/2007');
   const [endDate, setEndDate] = useState('');
+  const [selectedTheme, setSelectedTheme] = useState('darkGold');
 
   useEffect(() => {
-    setChartData(data as ElectricityData[]);
-  }, []);
-
-  // useEffect(() => {
-  //   setChartData(data as ElectricityData[]);
-  //   chartData.forEach((entry) => {
-  //     entry.Date = normalizeDate(entry.Date);
-  //   });
-  // }, [chartData]);
+    setChartData(data as ConsumptionData[]);
+    chartData.forEach((entry) => {
+      entry.Date = formatDate(
+        parse(entry.Date, 'd/M/yyyy', new Date()),
+        'dd/MM/yyyy',
+      );
+    });
+  }, [chartData]);
 
   useEffect(() => {
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
@@ -57,7 +51,7 @@ const BarChart = () => {
       const barChart = lc
         .BarChart({
           type: BarChartTypes.Vertical,
-          theme: Themes.darkGold,
+          theme: Themes[selectedTheme as keyof typeof Themes],
           container,
         })
         .setSorting(BarChartSorting.None);
@@ -71,14 +65,16 @@ const BarChart = () => {
     } else {
       console.error('LightningChart license key is undefined');
     }
-  }, [id]);
+  }, [id, selectedTheme]);
+
+  console.log('selectedTheme: ', selectedTheme);
 
   useEffect(() => {
     if (chartData.length === 0 || !barChart) return;
 
     // Sum the global active power for each day
     const aggregatedData = chartData.reduce((result, entry) => {
-      const date = normalizeDate(entry.Date);
+      const date = entry.Date;
       if (result[date]) {
         result[date] += parseFloat(entry.Global_active_power);
       } else {
@@ -87,23 +83,40 @@ const BarChart = () => {
       return result;
     }, {} as { [key: string]: number });
 
-    // Get the first week of the data
-    const slicedData = Object.entries(aggregatedData)
-      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-      .slice(0, 7);
+    const allDates = Object.keys(aggregatedData);
+    // Sort the dates to ensure correct ordering
+    const sortedDates = allDates.sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+    );
 
-    // set the start and end date
-    setStartDate(slicedData[0][0]);
-    setEndDate(slicedData[slicedData.length - 1][0]);
+    // Find the index of the startDate in the sortedDates
+    const startIndex = sortedDates.findIndex(
+      (date) => new Date(date).getTime() >= new Date(startDate).getTime(),
+    );
 
-    const mappedData = slicedData.map(([date, value]) => ({
+    // Get the first 7 days from the startIndex
+    const filteredDates = sortedDates.slice(startIndex, startIndex + 7);
+
+    // set the new start and end date
+    setStartDate(filteredDates[0]);
+    setEndDate(filteredDates[filteredDates.length - 1]);
+
+    // Now use the filtered dates to get the corresponding data
+    const filteredData: Array<[string, number]> = filteredDates.map((date) => [
+      date,
+      aggregatedData[date],
+    ]);
+
+    console.log('filteredData: ', filteredData);
+
+    const mappedData = filteredData.map(([date, value]) => ({
       category: date,
       value: value,
     }));
 
     barChart.setData(mappedData);
 
-    const theme = Themes.darkGold;
+    const theme = Themes.lightNature;
 
     barChart.getBars().forEach((bar: any) =>
       bar.setFillStyle(
@@ -117,18 +130,91 @@ const BarChart = () => {
         }),
       ),
     );
-  }, [id, chartData, barChart]);
+  }, [id, chartData, barChart, startDate, endDate]);
+
+  const addWeek = (dateString: string) => {
+    const [day, month, year] = dateString.split('/');
+
+    // Convert day, month, and year to numbers
+    const currentDay = parseInt(day, 10);
+    const currentMonth = parseInt(month, 10);
+    const currentYear = parseInt(year, 10);
+
+    // Create a Date object with the current date
+    const currentDate = new Date(currentYear, currentMonth - 1, currentDay);
+
+    // Add 7 days to the current date
+    const newDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    // Get the components of the new date
+    const newDay = newDate.getDate();
+    const newMonth = newDate.getMonth() + 1;
+    const newYear = newDate.getFullYear();
+
+    // Format the components as strings with leading zeros if necessary
+    const formattedDay = String(newDay).padStart(2, '0');
+    const formattedMonth = String(newMonth).padStart(2, '0');
+    const formattedYear = String(newYear);
+
+    return `${formattedDay}/${formattedMonth}/${formattedYear}`;
+  };
+  const handleWeekChange = () => {
+    const start = startDate;
+    const end = endDate;
+
+    const newStartDate = addWeek(start);
+    const newEndDate = addWeek(end);
+
+    console.log('newStartDate: ', newStartDate);
+    console.log('newEndDate: ', newEndDate);
+    console.log('startDate: ', startDate);
+    console.log('endDate: ', endDate);
+
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+  };
 
   return (
     <Container>
       <div className='controls-container'>
-        <div
-          id={id}
-          className='chart-container'
-        ></div>
+        <FormControl sx={{ width: 300 }}>
+          <Select
+            value={selectedTheme}
+            onChange={(e) => setSelectedTheme(e.target.value as any)}
+            renderValue={(selected) => {
+              const selectedThemeOption = ThemeOptions.find(
+                (option) => option.theme === selected,
+              );
+              return selectedThemeOption
+                ? `Theme: ${selectedThemeOption.name}`
+                : '';
+            }}
+          >
+            {ThemeOptions.map((option) => (
+              <MenuItem
+                key={option.theme}
+                value={option.theme}
+              >
+                {option.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl sx={{ width: 150 }}>
+          <Button
+            variant='outlined'
+            onClick={handleWeekChange}
+          >
+            Next Week
+          </Button>
+        </FormControl>
       </div>
+      <div
+        id={id}
+        className='chart-container'
+      ></div>
     </Container>
   );
 };
 
-export default BarChart;
+export default BarChartComp;
