@@ -11,6 +11,7 @@ import {
   SolidFill,
   Themes,
   BarChart,
+  BarChartBar,
 } from '@arction/lcjs';
 import {
   parse,
@@ -97,10 +98,6 @@ const BarChartComp = () => {
     // Get the first 7 days from the startIndex
     const filteredDates = sortedDates.slice(startIndex, startIndex + 7);
 
-    // set the new start and end date
-    setStartDate(filteredDates[0]);
-    setEndDate(filteredDates[filteredDates.length - 1]);
-
     // Now use the filtered dates to get the corresponding data
     const filteredData: Array<[string, number]> = filteredDates.map((date) => [
       date,
@@ -118,7 +115,7 @@ const BarChartComp = () => {
 
     const theme = Themes.lightNature;
 
-    barChart.getBars().forEach((bar: any) =>
+    barChart.getBars().forEach((bar: BarChartBar) =>
       bar.setFillStyle(
         new SolidFill({
           color:
@@ -165,13 +162,13 @@ const BarChartComp = () => {
     const newStartDate = addWeek(start);
     const newEndDate = addWeek(end);
 
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+
     console.log('newStartDate: ', newStartDate);
     console.log('newEndDate: ', newEndDate);
     console.log('startDate: ', startDate);
     console.log('endDate: ', endDate);
-
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
   };
 
   return (
