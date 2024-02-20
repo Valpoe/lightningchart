@@ -1,20 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import Container from '@mui/material/Container';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
-import InputAdornment from '@mui/material/InputAdornment';
-import { UIBackground, ChartXY, AxisTickStrategies } from '@arction/lcjs';
+import { useState, useEffect, useRef } from 'react';
+import {
+  Container,
+  TextField,
+  MenuItem,
+  FormControl,
+  Select,
+  InputAdornment,
+} from '@mui/material';
+import {
+  UIBackground,
+  ChartXY,
+  AxisTickStrategies,
+  DashedLine,
+  SolidFill,
+  ColorRGBA,
+  SolidLine,
+  ColorHEX,
+} from '@arction/lcjs';
 import Papa from 'papaparse';
-import '../../styles/controls-container.css';
 import { createChart } from '../../components/ChartHelper';
-
-interface CountryData {
-  iso_code: string;
-  date: string;
-  icu_patients_per_million: number;
-}
+import { CountryData, colorOptions } from '../../utilities/definitions';
+import '../../styles/controls-container.css';
+import { count } from 'console';
 
 const LineChart = () => {
   const [startDate, setStartDate] = useState('');
@@ -26,6 +33,37 @@ const LineChart = () => {
   );
   const [isoCodes, setIsoCodes] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState(colorOptions[0].color);
+  const colorChangeListenerRef = useRef<() => void>();
+
+  useEffect(() => {
+    // Get the license key from the environment variable
+    const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
+
+    // Check if the license key is defined and chartContainerRef is available
+    if (licenseKey) {
+      // Initialize the chart when the component mounts
+      const newChart = createChart(licenseKey, 'chart-container');
+      newChart
+        .getDefaultAxisX()
+        .setTickStrategy(AxisTickStrategies.DateTime)
+        .setTitle('Date Range');
+      newChart.getDefaultAxisY().setTitle('ICU Patients / Million');
+      newChart.setTitle('ICU Patients / Million');
+      setChart(newChart);
+
+      // Clean up the chart when the component unmounts
+      return () => {
+        if (newChart) {
+          newChart.dispose();
+        }
+      };
+    } else {
+      console.error(
+        'LightningChart license key is undefined or chart container is null.',
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,10 +75,10 @@ const LineChart = () => {
         // Parse CSV data using papaparse
         Papa.parse(await response.text(), {
           header: true,
-          complete: (result: any) => {
+          complete: (result: CountryData) => {
             // Extract unique ISO codes from the parsed data
             const availableIsoCodes = Array.from(
-              new Set(result.data.map((row: any) => row.iso_code)),
+              new Set(result.data?.map((row: CountryData) => row.iso_code)),
             );
 
             // Populate the isoCodes state with unique ISO codes
@@ -48,23 +86,23 @@ const LineChart = () => {
 
             // Extract unique locations from the parsed data
             const availableLocations = Array.from(
-              new Set(result.data.map((row: any) => row.entity)),
+              new Set(result.data?.map((row: CountryData) => row.entity)),
             );
 
             // Populate the locations state with unique locations
             setLocations(availableLocations as string[]);
 
             // Filter the data to only include ICU occupancy per million
-            const newData: CountryData[] = result.data
-              .filter(
-                (row: any) =>
+            const newData: CountryData[] = (
+              result.data?.filter(
+                (row: CountryData) =>
                   row.indicator === 'Daily ICU occupancy per million',
-              )
-              .map((row: any) => ({
-                iso_code: row.iso_code || '',
-                date: row.date || '',
-                icu_patients_per_million: parseFloat(row.value || '0'),
-              }));
+              ) as CountryData[]
+            ).map((row: CountryData) => ({
+              iso_code: row.iso_code || '',
+              date: row.date || '',
+              icu_patients_per_million: parseFloat(row.value || '0'),
+            }));
 
             // Set the chart data state
             setChartData(newData);
@@ -96,55 +134,77 @@ const LineChart = () => {
       // Create a line series for each selected country
       selectedCountries.forEach((country) => {
         const countrySeries = chart.addLineSeries();
+        countrySeries.setStrokeStyle(
+          new SolidLine({
+            thickness: 2,
+            fillStyle: new SolidFill({ color: ColorHEX(selectedColor) }),
+          }),
+        );
+
         const countryData = chartData.filter(
           (data) =>
             data.iso_code === country &&
             new Date(data.date).getTime() >= new Date(startDate).getTime() &&
             new Date(data.date).getTime() <= new Date(endDate).getTime(),
         );
-        console.log('line series: ', countrySeries);
+
         const seriesData = countryData
           .filter((data) => !isNaN(new Date(data.date).getTime()))
           .map((data) => ({
             x: new Date(data.date).getTime(),
             y: data.icu_patients_per_million,
           }));
+
         // Check if there are enough data points for a line series
         if (seriesData.length > 1) {
           countrySeries.add(seriesData);
+          console.log('seriesData: ', seriesData);
+
+          // Calculate SMA for the seriesData
+          const smaSeries = chart.addLineSeries();
+          // Use selectedColor state directly to set the initial stroke style
+          smaSeries.setStrokeStyle(
+            new DashedLine({
+              thickness: 2,
+              fillStyle: new SolidFill({ color: ColorRGBA(255, 0, 0) }),
+            }),
+          );
+          smaSeries.setName(`${country} - SMA`);
+
+          const smaValues = [];
+
+          for (let i = 1; i < seriesData.length - 1; i++) {
+            let mean =
+              (seriesData[i - 1].y + seriesData[i].y + seriesData[i + 1].y) / 3;
+            smaValues.push({ x: seriesData[i].x, y: mean });
+          }
+
+          // Check if smaValues is not empty before adding to the series
+          if (smaValues.length > 0) {
+            smaSeries.add(smaValues);
+          } else {
+            console.error('smaValues is empty!');
+          }
         }
+        // Listen to changes in selectedColor state and update stroke styles
+        const colorChangeListener = () => {
+          countrySeries.setStrokeStyle(
+            new SolidLine({
+              thickness: 2,
+              fillStyle: new SolidFill({ color: ColorHEX(selectedColor) }),
+            }),
+          );
+        };
+        colorChangeListenerRef.current = colorChangeListener;
       });
     }
-  }, [chart, chartData, selectedCountries, startDate, endDate]);
+  }, [chart, chartData, selectedCountries, startDate, endDate, selectedColor]);
 
   useEffect(() => {
-    // Get the license key from the environment variable
-    const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
-
-    // Check if the license key is defined and chartContainerRef is available
-    if (licenseKey) {
-      // Initialize the chart when the component mounts
-      const newChart = createChart(licenseKey, 'chart-container');
-      newChart
-        .getDefaultAxisX()
-        .setTickStrategy(AxisTickStrategies.DateTime)
-        .setTitle('Date Range');
-      newChart.getDefaultAxisY().setTitle('ICU Patients / Million');
-      newChart.setTitle('ICU Patients / Million');
-      setChart(newChart);
-
-      // Clean up the chart when the component unmounts
-      return () => {
-        if (newChart) {
-          newChart.dispose();
-        }
-      };
-    } else {
-      console.error(
-        'LightningChart license key is undefined or chart container is null.',
-      );
+    if (colorChangeListenerRef.current) {
+      colorChangeListenerRef.current();
     }
-  }, []);
+  }, [selectedColor]);
 
   // Create an array of objects containing the ISO code and location
   const isoCodeLocationPairs = isoCodes.map((isoCode, index) => ({
@@ -209,6 +269,29 @@ const LineChart = () => {
                 {selectedCountries.includes(pair.isoCode) && (
                   <span style={{ marginLeft: '8px', color: 'green' }}>✔</span>
                 )}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl sx={{ width: 300 }}>
+          <Select
+            value={selectedColor}
+            onChange={(e) => setSelectedColor(e.target.value as string)}
+            renderValue={(selected) => {
+              const selectedColorOption = colorOptions.find(
+                (option) => option.color === selected,
+              );
+              return selectedColorOption
+                ? `Line Color: ${selectedColorOption.name}`
+                : '';
+            }}
+          >
+            {colorOptions.map((option) => (
+              <MenuItem
+                key={option.color}
+                value={option.color}
+              >
+                {option.name}
               </MenuItem>
             ))}
           </Select>
