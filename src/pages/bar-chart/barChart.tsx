@@ -30,18 +30,20 @@ const BarChartComp = () => {
   const [chartData, setChartData] = useState<ConsumptionData[]>([]);
   const [barChart, setBarChart] = useState<BarChart | undefined>(undefined);
   const [startDate, setStartDate] = useState('01/01/2007');
-  const [endDate, setEndDate] = useState('');
+  const [endDate, setEndDate] = useState('07/01/2007');
   const [selectedTheme, setSelectedTheme] = useState('darkGold');
 
   useEffect(() => {
-    setChartData(data as ConsumptionData[]);
-    chartData.forEach((entry) => {
-      entry.Date = formatDate(
-        parse(entry.Date, 'd/M/yyyy', new Date()),
-        'dd/MM/yyyy',
-      );
-    });
-  }, [chartData]);
+    if (Array.isArray(data)) {
+      const formattedChartData = data.map((entry) => ({
+        ...entry,
+        Date: parse(entry.Date, 'd/M/yyyy', new Date()),
+      }));
+
+      setChartData(formattedChartData);
+    }
+  }, []);
+  console.log('chartData: ', chartData);
 
   useEffect(() => {
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
@@ -74,8 +76,18 @@ const BarChartComp = () => {
     if (chartData.length === 0 || !barChart) return;
 
     // Sum the global active power for each day
+    // const aggregatedData = chartData.reduce((result, entry) => {
+    //   const date = entry.Date;
+    //   if (result[date]) {
+    //     result[date] += parseFloat(entry.Global_active_power);
+    //   } else {
+    //     result[date] = parseFloat(entry.Global_active_power);
+    //   }
+    //   return result;
+    // }, {} as { [key: string]: number });
+
     const aggregatedData = chartData.reduce((result, entry) => {
-      const date = entry.Date;
+      const date = formatDate(entry.Date, 'dd/MM/yyyy');
       if (result[date]) {
         result[date] += parseFloat(entry.Global_active_power);
       } else {
@@ -84,11 +96,15 @@ const BarChartComp = () => {
       return result;
     }, {} as { [key: string]: number });
 
+    console.log('aggregatedData: ', aggregatedData);
+
     const allDates = Object.keys(aggregatedData);
     // Sort the dates to ensure correct ordering
     const sortedDates = allDates.sort(
       (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
+
+    console.log('sortedDates: ', sortedDates);
 
     // Find the index of the startDate in the sortedDates
     const startIndex = sortedDates.findIndex(
