@@ -8,7 +8,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { UIBackground, ChartXY, AxisTickStrategies } from '@arction/lcjs';
 import Papa from 'papaparse';
 import '../../styles/controls-container.css';
-import { createChart } from '../../components/ChartHelper';
+import { createChart } from '../../components/chartHelper';
 
 interface CountryData {
   iso_code: string;
