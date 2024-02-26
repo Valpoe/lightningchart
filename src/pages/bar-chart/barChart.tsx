@@ -12,6 +12,7 @@ import {
   Themes,
   BarChart,
   BarChartBar,
+  ColorHEX,
 } from '@arction/lcjs';
 import {
   parse,
@@ -23,6 +24,8 @@ import {
 } from 'date-fns';
 import data from '../../data/power-consumption.json';
 import { ThemeOptions, ConsumptionData } from '../../utilities/definitions';
+import { createBarChart } from '../../components/ChartHelper';
+
 import '../../styles/controls-container.css';
 
 const BarChartComp = () => {
@@ -47,19 +50,28 @@ const BarChartComp = () => {
 
   useEffect(() => {
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
-    const container = document.getElementById(id) as HTMLDivElement;
+    // const container = document.getElementById(id) as HTMLDivElement;
 
     if (licenseKey) {
-      const lc = lightningChart({ license: licenseKey });
-      const barChart = lc
-        .BarChart({
-          type: BarChartTypes.Vertical,
-          theme: Themes[selectedTheme as keyof typeof Themes],
-          container,
-        })
-        .setSorting(BarChartSorting.None);
+      const barChart = createBarChart(licenseKey, 'chart-container', selectedTheme);
+      barChart.setSorting(BarChartSorting.None);
+      // const barChart = lc
+      //   .BarChart({
+      //     type: BarChartTypes.Vertical,
+      //     theme: Themes[selectedTheme as keyof typeof Themes],
+      //     container,
+      //   })
+      //   .setSorting(BarChartSorting.None);
       barChart.setTitle('Global Active Power Consumption');
       barChart.valueAxis.setTitle('Global Active Power (kW)');
+      barChart.setCategoryLabels({
+        labelFillStyle: new SolidFill({ color: ColorHEX('#feffba')})
+      })
+      barChart.setValueLabels({ 
+        position: 'inside-bar-centered',
+        formatter: (bar, category, value) => `${value.toFixed(2)} kW`,
+      })
+      // barChart.setSeriesBackgroundFillStyle(new SolidFill({ color: ColorHEX('#2b2b2b') }));
       setBarChart(barChart);
 
       return () => {
@@ -223,7 +235,7 @@ const BarChartComp = () => {
         </FormControl>
       </div>
       <div
-        id={id}
+        id='chart-container'
         className='chart-container'
       ></div>
     </Container>

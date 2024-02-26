@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@arction/lcjs": "^5.1.0",
+    "@arction/lcjs-themes": "^3.1.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/nunito-sans": "^5.0.8",
@@ -50,6 +51,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/papaparse": "^5.3.14"
   }
 }
