@@ -57,6 +57,17 @@ export default function Layout({ children }: LayoutProps = {}) {
             <ListItemText primary='Bar Chart' />
           </ListItemButton>
         </Link>
+        <Link
+          to='/bubble-chart'
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <ListItemButton>
+            <ListItemIcon>
+              <BarChartIcon />
+            </ListItemIcon>
+            <ListItemText primary='Bubble Chart' />
+          </ListItemButton>
+        </Link>
       </List>
     </div>
   );
