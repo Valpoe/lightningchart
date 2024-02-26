@@ -170,8 +170,7 @@ const RectangleChart = () => {
       </div>
       <div
         id='chart-container'
-        className='chart-container'
-      ></div>
+        className='chart-container'></div>
     </Container>
   );
 };

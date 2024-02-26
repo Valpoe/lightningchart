@@ -267,13 +267,11 @@ const LineChart = () => {
                 return <em>Select countries</em>;
               }
               return selectedCountriesLabel;
-            }}
-          >
+            }}>
             {isoCodeLocationPairs.map((pair) => (
               <MenuItem
                 key={pair.key}
-                value={pair.isoCode}
-              >
+                value={pair.isoCode}>
                 {pair.isoCode} - {pair.location}
                 {selectedCountries.includes(pair.isoCode) && (
                   <span style={{ marginLeft: '8px', color: 'green' }}>✔</span>
@@ -293,13 +291,11 @@ const LineChart = () => {
               return selectedColorOption
                 ? `Line Color: ${selectedColorOption.name}`
                 : '';
-            }}
-          >
+            }}>
             {colorOptions.map((option) => (
               <MenuItem
                 key={option.color}
-                value={option.color}
-              >
+                value={option.color}>
                 {option.name}
               </MenuItem>
             ))}
