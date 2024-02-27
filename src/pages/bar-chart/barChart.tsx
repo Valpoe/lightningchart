@@ -25,7 +25,6 @@ import {
 import data from '../../data/power-consumption.json';
 import { ThemeOptions, ConsumptionData } from '../../utilities/definitions';
 import { createBarChart } from '../../components/ChartHelper';
-
 import '../../styles/controls-container.css';
 
 const BarChartComp = () => {
@@ -50,18 +49,23 @@ const BarChartComp = () => {
 
   useEffect(() => {
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
-    // const container = document.getElementById(id) as HTMLDivElement;
-
+    const container = document.getElementById(id) as HTMLDivElement;
+    const lc = lightningChart({
+      license: licenseKey,
+      licenseInformation: {
+        appTitle: 'LightningChart JS',
+        company: 'LightningChart Ltd.',
+      },
+    });
     if (licenseKey) {
-      const barChart = createBarChart(licenseKey, 'chart-container', selectedTheme);
-      barChart.setSorting(BarChartSorting.None);
-      // const barChart = lc
-      //   .BarChart({
-      //     type: BarChartTypes.Vertical,
-      //     theme: Themes[selectedTheme as keyof typeof Themes],
-      //     container,
-      //   })
-      //   .setSorting(BarChartSorting.None);
+      const barChart = lc
+        .BarChart({
+          type: BarChartTypes.Vertical,
+          theme: Themes[selectedTheme as keyof typeof Themes],
+          container,
+        })
+        .setSorting(BarChartSorting.None);
+      console.log('selectedTheme: ', selectedTheme);
       barChart.setTitle('Global Active Power Consumption');
       barChart.valueAxis.setTitle('Global Active Power (kW)');
       barChart.setCategoryLabels({
@@ -216,10 +220,7 @@ const BarChartComp = () => {
             }}
           >
             {ThemeOptions.map((option) => (
-              <MenuItem
-                key={option.theme}
-                value={option.theme}
-              >
+              <MenuItem key={option.name} value={option.theme.toString()}>
                 {option.name}
               </MenuItem>
             ))}
@@ -235,7 +236,7 @@ const BarChartComp = () => {
         </FormControl>
       </div>
       <div
-        id='chart-container'
+        id={id}
         className='chart-container'
       ></div>
     </Container>

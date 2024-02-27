@@ -22,7 +22,6 @@ export const createChart = (
 export const createBarChart = (
   licenseKey: string,
   container: 'chart-container',
-  theme: string,
 ) => {
   const lc = lightningChart({
     license: licenseKey,
