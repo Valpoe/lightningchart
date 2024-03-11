@@ -4,6 +4,7 @@ import './App.css';
 import LineChart from './pages/line-chart/lineChart';
 import RectangleChart from './pages/rectangle-chart/rectangleChart';
 import BarChart from './pages/bar-chart/barChart';
+import BubbleChart from './pages/bubble-chart/bubbleChart';
 
 function App() {
   return (
@@ -21,6 +22,10 @@ function App() {
           <Route
             path='/bar-chart'
             element={<BarChart />}
+          />
+          <Route
+            path='/bubble-chart'
+            element={<BubbleChart />}
           />
         </Routes>
       </Layout>

@@ -12,10 +12,12 @@ import {
   Themes,
   BarChart,
   BarChartBar,
+  ColorHEX,
 } from '@arction/lcjs';
 import { parse, isWithinInterval, eachDayOfInterval, format, formatDate, set } from 'date-fns';
 import data from '../../data/power-consumption.json';
 import { ThemeOptions, ConsumptionData } from '../../utilities/definitions';
+import { createBarChart } from '../../components/ChartHelper';
 import '../../styles/controls-container.css';
 
 const BarChartComp = () => {
@@ -41,9 +43,14 @@ const BarChartComp = () => {
   useEffect(() => {
     const licenseKey = process.env.REACT_APP_LIGHTNINGCHART_LICENSE_KEY;
     const container = document.getElementById(id) as HTMLDivElement;
-
+    const lc = lightningChart({
+      license: licenseKey,
+      licenseInformation: {
+        appTitle: 'LightningChart JS',
+        company: 'LightningChart Ltd.',
+      },
+    });
     if (licenseKey) {
-      const lc = lightningChart({ license: licenseKey });
       const barChart = lc
         .BarChart({
           type: BarChartTypes.Vertical,
@@ -51,8 +58,17 @@ const BarChartComp = () => {
           container,
         })
         .setSorting(BarChartSorting.None);
+      console.log('selectedTheme: ', selectedTheme);
       barChart.setTitle('Global Active Power Consumption');
       barChart.valueAxis.setTitle('Global Active Power (kW)');
+      barChart.setCategoryLabels({
+        labelFillStyle: new SolidFill({ color: ColorHEX('#feffba')})
+      })
+      barChart.setValueLabels({ 
+        position: 'inside-bar-centered',
+        formatter: (bar, category, value) => `${value.toFixed(2)} kW`,
+      })
+      // barChart.setSeriesBackgroundFillStyle(new SolidFill({ color: ColorHEX('#2b2b2b') }));
       setBarChart(barChart);
 
       return () => {
@@ -191,9 +207,7 @@ const BarChartComp = () => {
               return selectedThemeOption ? `Theme: ${selectedThemeOption.name}` : '';
             }}>
             {ThemeOptions.map((option) => (
-              <MenuItem
-                key={option.theme}
-                value={option.theme}>
+              <MenuItem key={option.name} value={option.theme.toString()}>
                 {option.name}
               </MenuItem>
             ))}

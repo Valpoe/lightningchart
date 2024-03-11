@@ -104,7 +104,7 @@ const RectangleChart = () => {
         .setTickStrategy(AxisTickStrategies.Empty);
 
       // Add custom tick labels as locations from the chart data
-      const tickLabels = chartData.map((data) => data.location);
+      const tickLabels = chartData.map((data) => data.location);  
 
       // Add the tick labels to the X-axis
       tickLabels.forEach((label, index) => {
@@ -157,6 +157,7 @@ const RectangleChart = () => {
       chart
         .getDefaultAxisY()
         .setInterval({ start: 0, end: maxBarHeight + 100000 });
+        
     }
   }, [chart, chartData]);
 

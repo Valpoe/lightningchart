@@ -16,12 +16,12 @@ import {
   ColorRGBA,
   SolidLine,
   ColorHEX,
+  emptyLine,
 } from '@arction/lcjs';
 import Papa from 'papaparse';
 import { createChart } from '../../components/chartHelper';
 import { CountryData, colorOptions } from '../../utilities/definitions';
 import '../../styles/controls-container.css';
-import { count } from 'console';
 
 const LineChart = () => {
   const [startDate, setStartDate] = useState('');
@@ -46,6 +46,14 @@ const LineChart = () => {
       const newChart = createChart(licenseKey, 'chart-container');
       newChart
         .getDefaultAxisX()
+        // .setTickStrategy(AxisTickStrategies.DateTime, ticks => ticks
+        //   .setMajorTickStyle(major => major
+        //     .setGridStrokeStyle(emptyLine)
+        //     )
+        //   .setMinorTickStyle(minor => minor
+        //     .setGridStrokeStyle(emptyLine)
+        //     )
+        // )
         .setTickStrategy(AxisTickStrategies.DateTime)
         .setTitle('Date Range');
       newChart.getDefaultAxisY().setTitle('ICU Patients / Million');
@@ -133,7 +141,7 @@ const LineChart = () => {
 
       // Create a line series for each selected country
       selectedCountries.forEach((country) => {
-        const countrySeries = chart.addLineSeries();
+        const countrySeries = chart.addPointLineSeries();
         countrySeries.setStrokeStyle(
           new SolidLine({
             thickness: 2,
@@ -158,10 +166,11 @@ const LineChart = () => {
         // Check if there are enough data points for a line series
         if (seriesData.length > 1) {
           countrySeries.add(seriesData);
+          // chart.getDefaultAxisY().fit();
           console.log('seriesData: ', seriesData);
 
           // Calculate SMA for the seriesData
-          const smaSeries = chart.addLineSeries();
+          const smaSeries = chart.addPointLineSeries();
           // Use selectedColor state directly to set the initial stroke style
           smaSeries.setStrokeStyle(
             new DashedLine({
@@ -295,8 +304,11 @@ const LineChart = () => {
       </div>
       <div
         id='chart-container'
-        className='chart-container'
-      />
+        className='chart-container'>
+        {/* <div style={{ position: 'relative', zIndex: 100, textAlign: 'center'  }}>
+          <span>Overlay</span>
+        </div> */}
+      </div>
     </Container>
   );
 };
