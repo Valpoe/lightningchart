@@ -18,7 +18,7 @@ import {
   ColorHEX,
 } from '@arction/lcjs';
 import Papa from 'papaparse';
-import { createChart } from '../../components/ChartHelper';
+import { createChart } from '../../components/chartHelper';
 import { CountryData, colorOptions } from '../../utilities/definitions';
 import '../../styles/controls-container.css';
 import { count } from 'console';

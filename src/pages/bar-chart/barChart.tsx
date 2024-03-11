@@ -13,14 +13,7 @@ import {
   BarChart,
   BarChartBar,
 } from '@arction/lcjs';
-import {
-  parse,
-  isWithinInterval,
-  eachDayOfInterval,
-  format,
-  formatDate,
-  set,
-} from 'date-fns';
+import { parse, isWithinInterval, eachDayOfInterval, format, formatDate, set } from 'date-fns';
 import data from '../../data/power-consumption.json';
 import { ThemeOptions, ConsumptionData } from '../../utilities/definitions';
 import '../../styles/controls-container.css';
@@ -86,29 +79,30 @@ const BarChartComp = () => {
     //   return result;
     // }, {} as { [key: string]: number });
 
-    const aggregatedData = chartData.reduce((result, entry) => {
-      const date = formatDate(entry.Date, 'dd/MM/yyyy');
-      if (result[date]) {
-        result[date] += parseFloat(entry.Global_active_power);
-      } else {
-        result[date] = parseFloat(entry.Global_active_power);
-      }
-      return result;
-    }, {} as { [key: string]: number });
+    const aggregatedData = chartData.reduce(
+      (result, entry) => {
+        const date = formatDate(entry.Date, 'dd/MM/yyyy');
+        if (result[date]) {
+          result[date] += parseFloat(entry.Global_active_power);
+        } else {
+          result[date] = parseFloat(entry.Global_active_power);
+        }
+        return result;
+      },
+      {} as { [key: string]: number }
+    );
 
     console.log('aggregatedData: ', aggregatedData);
 
     const allDates = Object.keys(aggregatedData);
     // Sort the dates to ensure correct ordering
-    const sortedDates = allDates.sort(
-      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-    );
+    const sortedDates = allDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     console.log('sortedDates: ', sortedDates);
 
     // Find the index of the startDate in the sortedDates
     const startIndex = sortedDates.findIndex(
-      (date) => new Date(date).getTime() >= new Date(startDate).getTime(),
+      (date) => new Date(date).getTime() >= new Date(startDate).getTime()
     );
 
     // Get the first 7 days from the startIndex
@@ -137,11 +131,9 @@ const BarChartComp = () => {
           color:
             bar.value > 2500
               ? theme.examples.badGoodColorPalette[0]
-              : theme.examples.badGoodColorPalette[
-                  theme.examples?.badGoodColorPalette.length - 1
-                ],
-        }),
-      ),
+              : theme.examples.badGoodColorPalette[theme.examples?.badGoodColorPalette.length - 1],
+        })
+      )
     );
   }, [id, chartData, barChart, startDate, endDate]);
 
@@ -195,19 +187,13 @@ const BarChartComp = () => {
             value={selectedTheme}
             onChange={(e) => setSelectedTheme(e.target.value as any)}
             renderValue={(selected) => {
-              const selectedThemeOption = ThemeOptions.find(
-                (option) => option.theme === selected,
-              );
-              return selectedThemeOption
-                ? `Theme: ${selectedThemeOption.name}`
-                : '';
-            }}
-          >
+              const selectedThemeOption = ThemeOptions.find((option) => option.theme === selected);
+              return selectedThemeOption ? `Theme: ${selectedThemeOption.name}` : '';
+            }}>
             {ThemeOptions.map((option) => (
               <MenuItem
                 key={option.theme}
-                value={option.theme}
-              >
+                value={option.theme}>
                 {option.name}
               </MenuItem>
             ))}
@@ -216,16 +202,14 @@ const BarChartComp = () => {
         <FormControl sx={{ width: 150 }}>
           <Button
             variant='outlined'
-            onClick={handleWeekChange}
-          >
+            onClick={handleWeekChange}>
             Next Week
           </Button>
         </FormControl>
       </div>
       <div
         id={id}
-        className='chart-container'
-      ></div>
+        className='chart-container'></div>
     </Container>
   );
 };
